@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "mention",
+          "attrs": {
+            "id": "mock-user-123",
+            "text": "@UserOne"
+          }
+        },
+        {
+          "type": "text",
+          "text": " please review "
+        },
+        {
+          "type": "text",
+          "text": "this",
+          "marks": [
+            {
+              "type": "link",
+              "attrs": {
+                "href": "https://example.com/tickets/MOCK-42"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": " by EOD."
+        }
+      ]
+    },
+    {
+      "type": "taskList",
+      "content": [
+        {
+          "type": "taskItem",
+          "attrs": {
+            "state": "DONE"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Write tests"
+            }
+          ]
+        },
+        {
+          "type": "taskItem",
+          "attrs": {
+            "state": "TODO"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Ship parser"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
