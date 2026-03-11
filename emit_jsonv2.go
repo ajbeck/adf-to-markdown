@@ -254,6 +254,20 @@ func escapeTableCell(s string) string {
 	return strings.ReplaceAll(s, "|", "\\|")
 }
 
+// escapeDelimiters escapes each character in delims that appears in s with a
+// preceding backslash. This is used for round-trip custom syntax tokens where
+// user-controlled text may contain delimiter characters.
+func escapeDelimiters(s string, delims string) string {
+	var b strings.Builder
+	for i := 0; i < len(s); i++ {
+		if strings.IndexByte(delims, s[i]) >= 0 {
+			b.WriteByte('\\')
+		}
+		b.WriteByte(s[i])
+	}
+	return b.String()
+}
+
 func chooseCodeFence(text string, style CodeFenceStyle) string {
 	fenceChar := '`'
 	if style == CodeFenceTildes {
