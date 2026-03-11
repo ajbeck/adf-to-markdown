@@ -176,7 +176,7 @@ ADF JSON --> adf-to-markdown --> Markdown --> goldmark-adf --> ADF JSON
 | `taskList` / `taskItem` | `- [x]` / `- [ ]` |
 | `expand` | `<details><summary>` |
 
-Delimiter characters inside user text are backslash-escaped to prevent ambiguity. See [docs/roundtrip-extensions.md](docs/roundtrip-extensions.md) for the full specification and [docs/library-integration.md](docs/library-integration.md) for integration details.
+Delimiter characters inside user text are backslash-escaped to prevent ambiguity. See [docs/extensions.md](docs/extensions.md) for complete extension documentation, [docs/roundtrip-extensions.md](docs/roundtrip-extensions.md) for the full specification, and [docs/library-integration.md](docs/library-integration.md) for integration details.
 
 ## Useful Options
 
