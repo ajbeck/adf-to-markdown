@@ -80,7 +80,8 @@ type decisionItemNode struct {
 }
 
 type cardBlockNode struct {
-	URL string
+	URL      string
+	NodeType string // "blockCard" or "embedCard"
 }
 
 type extensionBlockNode struct {
@@ -306,26 +307,31 @@ func (n decisionListNode) renderBlock(e *emitter) error {
 }
 
 func (n decisionItemNode) renderBlock(e *emitter) error {
-	e.writeString("- [decision")
-	if n.State != "" {
-		e.writeString(":")
-		e.writeString(n.State)
+	if n.State == "DECIDED" {
+		e.writeString("- [!] ")
+	} else {
+		e.writeString("- [?] ")
 	}
-	e.writeString("] ")
 	e.writeInlineNodes(n.Content)
 	return nil
 }
 
 func (n cardBlockNode) renderBlock(e *emitter) error {
 	if n.URL == "" {
-		e.writeString("[card]")
+		if n.NodeType == "embedCard" {
+			e.writeString("[embed]")
+		} else {
+			e.writeString("[card]")
+		}
 		return nil
 	}
-	e.writeString("[")
-	e.writeString(n.URL)
-	e.writeString("](")
-	e.writeString(n.URL)
-	e.writeString(")")
+	if n.NodeType == "embedCard" {
+		e.writeString("[embed:")
+	} else {
+		e.writeString("[card:")
+	}
+	e.writeString(escapeDelimiters(n.URL, "]"))
+	e.writeString("]")
 	return nil
 }
 
@@ -384,11 +390,11 @@ func (n hardBreakNode) renderInline(e *emitter) error {
 }
 
 type emojiInlineNode struct {
-	Text string
+	ShortName string
 }
 
 func (n emojiInlineNode) renderInline(e *emitter) error {
-	e.writeString(n.Text)
+	e.writeString(n.ShortName)
 	return nil
 }
 
@@ -398,16 +404,22 @@ type mentionInlineNode struct {
 }
 
 func (n mentionInlineNode) renderInline(e *emitter) error {
-	if n.Text != "" {
-		e.writeString(n.Text)
-		return nil
+	displayName := n.Text
+	if displayName == "" {
+		displayName = n.ID
 	}
-	if n.ID != "" {
-		e.writeString("@")
-		e.writeString(n.ID)
-		return nil
+	if displayName == "" {
+		displayName = "mention"
 	}
-	e.writeString("@mention")
+	id := n.ID
+	if id == "" {
+		id = "unknown"
+	}
+	e.writeString("@[")
+	e.writeString(escapeDelimiters(displayName, "]"))
+	e.writeString("](")
+	e.writeString(escapeDelimiters(id, ")"))
+	e.writeString(")")
 	return nil
 }
 
@@ -423,12 +435,19 @@ func (n dateInlineNode) renderInline(e *emitter) error {
 }
 
 type statusInlineNode struct {
-	Text string
+	Text  string
+	Color string
 }
 
 func (n statusInlineNode) renderInline(e *emitter) error {
-	e.writeString("[")
-	e.writeString(n.Text)
+	e.writeString("[status:")
+	e.writeString(escapeDelimiters(n.Text, "|]"))
+	e.writeString("|")
+	color := n.Color
+	if color == "" {
+		color = "neutral"
+	}
+	e.writeString(color)
 	e.writeString("]")
 	return nil
 }
@@ -439,14 +458,12 @@ type inlineCardNode struct {
 
 func (n inlineCardNode) renderInline(e *emitter) error {
 	if n.URL == "" {
-		e.writeString("[inline-card]")
+		e.writeString("[card]")
 		return nil
 	}
-	e.writeString("[")
-	e.writeString(n.URL)
-	e.writeString("](")
-	e.writeString(n.URL)
-	e.writeString(")")
+	e.writeString("[card:")
+	e.writeString(escapeDelimiters(n.URL, "]"))
+	e.writeString("]")
 	return nil
 }
 

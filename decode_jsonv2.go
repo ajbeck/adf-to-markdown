@@ -217,7 +217,7 @@ func (d *decoder) decodeBlock(raw jsontext.Value, path string) (blockNode, error
 		return decisionListNode{Items: items}, nil
 	case "blockCard", "embedCard":
 		url := extractCardURL(env.Attrs)
-		return cardBlockNode{URL: url}, nil
+		return cardBlockNode{URL: url, NodeType: env.Type}, nil
 	case "extension", "bodiedExtension", "extensionFrame", "multiBodiedExtension", "bodiedSyncBlock", "syncBlock":
 		key := extractExtensionKey(env.Attrs)
 		content := make([]blockNode, 0, len(env.Content))
@@ -481,14 +481,11 @@ func (d *decoder) decodeInline(raw jsontext.Value, path string) (inlineNode, err
 	case "hardBreak":
 		return hardBreakNode{}, nil
 	case "emoji":
-		text, _ := env.Attrs["text"].(string)
-		if text == "" {
-			text, _ = env.Attrs["shortName"].(string)
+		shortName, _ := env.Attrs["shortName"].(string)
+		if shortName == "" {
+			shortName = ":emoji:"
 		}
-		if text == "" {
-			text = ":emoji:"
-		}
-		return emojiInlineNode{Text: text}, nil
+		return emojiInlineNode{ShortName: shortName}, nil
 	case "mention":
 		text, _ := env.Attrs["text"].(string)
 		id, _ := env.Attrs["id"].(string)
@@ -498,7 +495,8 @@ func (d *decoder) decodeInline(raw jsontext.Value, path string) (inlineNode, err
 		return dateInlineNode{Timestamp: ts}, nil
 	case "status":
 		text, _ := env.Attrs["text"].(string)
-		return statusInlineNode{Text: text}, nil
+		color, _ := env.Attrs["color"].(string)
+		return statusInlineNode{Text: text, Color: color}, nil
 	case "inlineCard":
 		url, _ := env.Attrs["url"].(string)
 		return inlineCardNode{URL: url}, nil

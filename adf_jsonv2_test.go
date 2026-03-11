@@ -434,7 +434,7 @@ func TestUnmarshalADF(t *testing.T) {
 				]
 			}`,
 			opts:     []Option{WithBuiltInSchemaValidation(false)},
-			expected: "- [decision:DECIDED] Use json/v2",
+			expected: "- [!] Use json/v2",
 		},
 		{
 			name: "block card",
@@ -445,7 +445,7 @@ func TestUnmarshalADF(t *testing.T) {
 					{"type":"blockCard","attrs":{"url":"https://example.com/card"}}
 				]
 			}`,
-			expected: "[https://example.com/card](https://example.com/card)",
+			expected: "[card:https://example.com/card]",
 		},
 		{
 			name: "embed card",
@@ -457,7 +457,7 @@ func TestUnmarshalADF(t *testing.T) {
 				]
 			}`,
 			opts:     []Option{WithBuiltInSchemaValidation(false)},
-			expected: "[https://example.com/embed](https://example.com/embed)",
+			expected: "[embed:https://example.com/embed]",
 		},
 		{
 			name: "extension default fallback",
@@ -500,7 +500,7 @@ func TestUnmarshalADF(t *testing.T) {
 				]
 			}`,
 			opts:     []Option{WithBuiltInSchemaValidation(false)},
-			expected: "[https://example.com/from-data](https://example.com/from-data)",
+			expected: "[card:https://example.com/from-data]",
 		},
 		{
 			name: "card url from attrs data array",
@@ -512,7 +512,7 @@ func TestUnmarshalADF(t *testing.T) {
 				]
 			}`,
 			opts:     []Option{WithBuiltInSchemaValidation(false)},
-			expected: "[https://example.com/from-array](https://example.com/from-array)",
+			expected: "[card:https://example.com/from-array]",
 		},
 		{
 			name: "bodied extension default fallback",
@@ -650,7 +650,91 @@ func TestUnmarshalADF(t *testing.T) {
 				]
 			}`,
 			opts:     []Option{WithBuiltInSchemaValidation(false)},
-			expected: "😀 @Brad [date:1582152559] [In Progress] [https://atlassian.com](https://atlassian.com)",
+			expected: ":emoji: @[@Brad](abc) [date:1582152559] [status:In Progress|yellow] [card:https://atlassian.com]",
+		},
+		{
+			name: "status with pipe in text",
+			input: `{
+				"version":1,
+				"type":"doc",
+				"content":[
+					{"type":"paragraph","content":[
+						{"type":"status","attrs":{"text":"Pass | Fail","color":"red"}}
+					]}
+				]
+			}`,
+			opts:     []Option{WithBuiltInSchemaValidation(false)},
+			expected: `[status:Pass \| Fail|red]`,
+		},
+		{
+			name: "status with bracket in text",
+			input: `{
+				"version":1,
+				"type":"doc",
+				"content":[
+					{"type":"paragraph","content":[
+						{"type":"status","attrs":{"text":"Done [v2]","color":"green"}}
+					]}
+				]
+			}`,
+			opts:     []Option{WithBuiltInSchemaValidation(false)},
+			expected: `[status:Done [v2\]|green]`,
+		},
+		{
+			name: "mention with bracket in name",
+			input: `{
+				"version":1,
+				"type":"doc",
+				"content":[
+					{"type":"paragraph","content":[
+						{"type":"mention","attrs":{"id":"abc","text":"O'Brien [PM]"}}
+					]}
+				]
+			}`,
+			opts:     []Option{WithBuiltInSchemaValidation(false)},
+			expected: `@[O'Brien [PM\]](abc)`,
+		},
+		{
+			name: "mention without text falls back to id",
+			input: `{
+				"version":1,
+				"type":"doc",
+				"content":[
+					{"type":"paragraph","content":[
+						{"type":"mention","attrs":{"id":"user-123"}}
+					]}
+				]
+			}`,
+			opts:     []Option{WithBuiltInSchemaValidation(false)},
+			expected: "@[user-123](user-123)",
+		},
+		{
+			name: "emoji uses shortName over text",
+			input: `{
+				"version":1,
+				"type":"doc",
+				"content":[
+					{"type":"paragraph","content":[
+						{"type":"emoji","attrs":{"shortName":":smile:","text":"😄"}}
+					]}
+				]
+			}`,
+			opts:     []Option{WithBuiltInSchemaValidation(false)},
+			expected: ":smile:",
+		},
+		{
+			name: "decision undecided",
+			input: `{
+				"version":1,
+				"type":"doc",
+				"content":[
+					{"type":"decisionList","content":[
+						{"type":"decisionItem","attrs":{"state":"UNDECIDED"},"content":[{"type":"text","text":"Pending review"}]}
+					]}
+				]
+			}`,
+			opts:     []Option{WithBuiltInSchemaValidation(false)},
+			expected: "- [?] Pending review",
 		},
 	}
 
@@ -939,5 +1023,26 @@ func TestUnsupportedNodeOption(t *testing.T) {
 	}
 	if string(got) != "[unsupported node: totallyUnknown]" {
 		t.Fatalf("unexpected fallback output: %q", got)
+	}
+}
+
+func TestEscapeDelimiters(t *testing.T) {
+	tests := []struct {
+		input  string
+		delims string
+		want   string
+	}{
+		{"hello", "|]", "hello"},
+		{"Pass | Fail", "|]", `Pass \| Fail`},
+		{"Done [v2]", "|]", `Done [v2\]`},
+		{"a|b]c", "|]", `a\|b\]c`},
+		{"no special", ")", "no special"},
+		{"id(123)", ")", `id(123\)`},
+	}
+	for _, tt := range tests {
+		got := escapeDelimiters(tt.input, tt.delims)
+		if got != tt.want {
+			t.Errorf("escapeDelimiters(%q, %q) = %q, want %q", tt.input, tt.delims, got, tt.want)
+		}
 	}
 }
