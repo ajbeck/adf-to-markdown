@@ -128,14 +128,15 @@ All syntax changes are implemented:
 
 ### goldmark-adf
 
-The following extensions are planned (see [roundtrip-extensions.md](roundtrip-extensions.md) for the full implementation plan):
+Phases 1-3 are implemented. Phase 4 extensions are planned.
 
-- [ ] Task list fix (emit `taskList`/`taskItem` ADF nodes)
-- [ ] Panel alert parser extension
+- [x] Task list fix (emit `taskList`/`taskItem` ADF nodes)
+- [x] Panel alert parser extension
+- [x] `:shortcode:` emoji parser extension
+- [x] Inline token parsers (status, mention, date, placeholder, cards)
+- [x] Decision list parser extension
 - [ ] `<details>` expand parser extension
-- [ ] `:shortcode:` emoji parser extension
-- [ ] Inline token parsers (status, mention, date, placeholder, cards)
-- [ ] Decision list parser extension
 - [ ] Layout section parser
 - [ ] Extension marker parser
+- [ ] Non-external media handling (URL schemes, grouping)
 - [ ] Inline HTML mark parsing (`<u>`, `<sub>`, `<sup>`)

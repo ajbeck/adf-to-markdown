@@ -150,6 +150,34 @@ func main() {
 }
 ```
 
+## Round-Trip with goldmark-adf
+
+This library is designed to work with [goldmark-adf](https://github.com/ajbeck/goldmark-adf) for lossless ADF round-tripping:
+
+```
+ADF JSON --> adf-to-markdown --> Markdown --> goldmark-adf --> ADF JSON
+```
+
+**adf-to-markdown** converts ADF JSON to Markdown, using custom syntax extensions for ADF-specific nodes that have no native Markdown equivalent. **goldmark-adf** parses that Markdown — including the custom extensions — back into ADF JSON.
+
+### Custom Extension Syntax
+
+| ADF Node | Markdown Output |
+|---|---|
+| `status` | `[status:text\|color]` |
+| `mention` | `@[name](id)` |
+| `date` | `[date:timestamp]` |
+| `placeholder` | `{{text}}` |
+| `inlineCard` / `blockCard` | `[card:url]` |
+| `embedCard` | `[embed:url]` |
+| `emoji` | `:shortcode:` |
+| `panel` | `> [!NOTE]` (GitHub alert syntax) |
+| `decisionList` / `decisionItem` | `- [!] text` / `- [?] text` |
+| `taskList` / `taskItem` | `- [x]` / `- [ ]` |
+| `expand` | `<details><summary>` |
+
+Delimiter characters inside user text are backslash-escaped to prevent ambiguity. See [docs/roundtrip-extensions.md](docs/roundtrip-extensions.md) for the full specification and [docs/library-integration.md](docs/library-integration.md) for integration details.
+
 ## Useful Options
 
 - `WithStrictSchema(bool)`
