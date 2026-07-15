@@ -255,6 +255,12 @@ func (n taskListNode) renderBlock(e *emitter) error {
 			e.writeString("\n")
 		}
 		if nested, ok := it.(taskListNode); ok {
+			if i == 0 {
+				if err := nested.renderBlock(e); err != nil {
+					return err
+				}
+				continue
+			}
 			inner := newEmitter(e.cfg)
 			if err := nested.renderBlock(inner); err != nil {
 				return err

@@ -343,9 +343,6 @@ func (d *decoder) decodeTaskItems(raws []jsontext.Value, path string) ([]blockNo
 			}
 			items = append(items, n)
 		case "taskList":
-			if i == 0 {
-				return nil, newDecodeError(p, ErrKindInvalidStructure, "taskList must begin with a taskItem or blockTaskItem")
-			}
 			nested, err := d.decodeTaskItems(env.Content, p+"/content")
 			if err != nil {
 				return nil, err
