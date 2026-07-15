@@ -317,26 +317,43 @@ func (d *decoder) decodeLayoutColumns(raws []jsontext.Value, path string) ([]lay
 	return cols, nil
 }
 
-func (d *decoder) decodeTaskItems(raws []jsontext.Value, path string) ([]taskItemNode, error) {
-	items := make([]taskItemNode, 0, len(raws))
+func (d *decoder) decodeTaskItems(raws []jsontext.Value, path string) ([]blockNode, error) {
+	items := make([]blockNode, 0, len(raws))
 	for i, raw := range raws {
 		p := fmt.Sprintf("%s/%d", path, i)
 		env, err := d.decodeEnvelope(raw, p)
 		if err != nil {
 			return nil, err
 		}
-		if env.Type != "taskItem" {
-			return nil, newDecodeError(p, ErrKindInvalidStructure, "taskList content must be taskItem nodes")
+		switch env.Type {
+		case "taskItem":
+			state, _ := env.Attrs["state"].(string)
+			content, err := d.decodeInlineContent(env.Content, p+"/content")
+			if err != nil {
+				return nil, err
+			}
+			items = append(items, taskItemNode{
+				State:   state,
+				Content: content,
+			})
+		case "blockTaskItem":
+			n, err := d.decodeBlock(raw, p)
+			if err != nil {
+				return nil, err
+			}
+			items = append(items, n)
+		case "taskList":
+			if i == 0 {
+				return nil, newDecodeError(p, ErrKindInvalidStructure, "taskList must begin with a taskItem or blockTaskItem")
+			}
+			nested, err := d.decodeTaskItems(env.Content, p+"/content")
+			if err != nil {
+				return nil, err
+			}
+			items = append(items, taskListNode{Items: nested})
+		default:
+			return nil, newDecodeError(p, ErrKindInvalidStructure, "taskList content must be taskItem, blockTaskItem, or taskList nodes")
 		}
-		state, _ := env.Attrs["state"].(string)
-		content, err := d.decodeInlineContent(env.Content, p+"/content")
-		if err != nil {
-			return nil, err
-		}
-		items = append(items, taskItemNode{
-			State:   state,
-			Content: content,
-		})
 	}
 	return items, nil
 }
