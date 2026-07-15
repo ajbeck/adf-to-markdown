@@ -817,6 +817,15 @@
             "language": {
               "type": "string"
             },
+            "wrap": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "hideLineNumbers": {
+              "type": "boolean"
+            },
             "uniqueId": {
               "type": "string"
             },
@@ -857,6 +866,15 @@
           "properties": {
             "language": {
               "type": "string"
+            },
+            "wrap": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "hideLineNumbers": {
+              "type": "boolean"
             },
             "uniqueId": {
               "type": "string"

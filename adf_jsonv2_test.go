@@ -109,12 +109,25 @@ func TestUnmarshalADF(t *testing.T) {
 				"version": 1,
 				"type": "doc",
 				"content": [
-					{"type": "codeBlock", "attrs": {"language": "go"}, "content": [
+					{"type": "codeBlock", "attrs": {"language": "go", "wrap": null, "hideLineNumbers": true}, "content": [
 						{"type": "text", "text": "fmt.Println(\"ok\")\n"}
 					]}
 				]
 			}`,
 			expected: "```go\nfmt.Println(\"ok\")\n```",
+		},
+		{
+			name: "code_block_root_only_attributes",
+			input: `{
+				"version": 1,
+				"type": "doc",
+				"content": [
+					{"type": "codeBlock", "marks": [{"type":"breakout","attrs":{"mode":"wide"}}], "attrs": {"wrap": false, "hideLineNumbers": true}, "content": [
+						{"type": "text", "text": "fmt.Println(\"ok\")\n"}
+					]}
+				]
+			}`,
+			expected: "```\nfmt.Println(\"ok\")\n```",
 		},
 		{
 			name: "hard break default two spaces",
@@ -399,14 +412,47 @@ func TestUnmarshalADF(t *testing.T) {
 				"version":1,
 				"type":"doc",
 				"content":[
-					{"type":"taskList","content":[
-						{"type":"taskItem","attrs":{"state":"TODO"},"content":[{"type":"text","text":"Ship parser"}]},
-						{"type":"taskItem","attrs":{"state":"DONE"},"content":[{"type":"text","text":"Write tests"}]}
+					{"type":"taskList","attrs":{"localId":"tasks"},"content":[
+						{"type":"taskItem","attrs":{"localId":"task-1","state":"TODO"},"content":[{"type":"text","text":"Ship parser"}]},
+						{"type":"taskItem","attrs":{"localId":"task-2","state":"DONE"},"content":[{"type":"text","text":"Write tests"}]}
 					]}
 				]
 			}`,
-			opts:     []Option{WithBuiltInSchemaValidation(false)},
 			expected: "- [ ] Ship parser\n- [x] Write tests",
+		},
+		{
+			name: "nested_task_list",
+			input: `{
+				"version":1,
+				"type":"doc",
+				"content":[
+					{"type":"taskList","attrs":{"localId":"top"},"content":[
+						{"type":"taskItem","attrs":{"localId":"parent","state":"TODO"},"content":[{"type":"text","text":"Parent"}]},
+						{"type":"taskList","attrs":{"localId":"nested"},"content":[
+							{"type":"taskItem","attrs":{"localId":"child","state":"DONE"},"content":[{"type":"text","text":"Child"}]}
+						]}
+					]}
+				]
+			}`,
+			expected: "- [ ] Parent\n  - [x] Child",
+		},
+		{
+			name: "task_list_with_block_task_item",
+			input: `{
+				"version":1,
+				"type":"doc",
+				"content":[
+					{"type":"taskList","attrs":{"localId":"top"},"content":[
+						{"type":"blockTaskItem","attrs":{"localId":"parent","state":"TODO"},"content":[
+							{"type":"paragraph","content":[{"type":"text","text":"Parent"}]}
+						]},
+						{"type":"taskList","attrs":{"localId":"nested"},"content":[
+							{"type":"taskItem","attrs":{"localId":"child","state":"DONE"},"content":[{"type":"text","text":"Child"}]}
+						]}
+					]}
+				]
+			}`,
+			expected: "- [ ] Parent\n  - [x] Child",
 		},
 		{
 			name: "block task item",
@@ -792,6 +838,27 @@ func TestStrictAndErrorPaths(t *testing.T) {
 			t.Fatalf("expected *Error, got %T", err)
 		}
 		if de.Path != "/content/0/content/0" || de.Kind != ErrKindInvalidText {
+			t.Fatalf("unexpected error metadata: %+v", de)
+		}
+	})
+
+	t.Run("nested_task_list_requires_leading_task_item", func(t *testing.T) {
+		_, err := UnmarshalADF([]byte(`{
+			"version":1,"type":"doc","content":[
+				{"type":"taskList","attrs":{"localId":"top"},"content":[
+					{"type":"taskList","attrs":{"localId":"nested"},"content":[
+						{"type":"taskItem","attrs":{"localId":"child","state":"TODO"},"content":[{"type":"text","text":"Child"}]}
+					]}
+				]}
+			]}`), WithBuiltInSchemaValidation(false))
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		var de *Error
+		if !errors.As(err, &de) {
+			t.Fatalf("expected *Error, got %T", err)
+		}
+		if de.Path != "/content/0/content/0" || de.Kind != ErrKindInvalidStructure {
 			t.Fatalf("unexpected error metadata: %+v", de)
 		}
 	})

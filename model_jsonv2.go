@@ -57,7 +57,7 @@ type mediaGroupNode struct {
 }
 
 type taskListNode struct {
-	Items []taskItemNode
+	Items []blockNode
 }
 
 type taskItemNode struct {
@@ -253,6 +253,14 @@ func (n taskListNode) renderBlock(e *emitter) error {
 	for i, it := range n.Items {
 		if i > 0 {
 			e.writeString("\n")
+		}
+		if nested, ok := it.(taskListNode); ok {
+			inner := newEmitter(e.cfg)
+			if err := nested.renderBlock(inner); err != nil {
+				return err
+			}
+			e.writeString(indentMultiline(inner.buf.String(), "  ", false))
+			continue
 		}
 		if err := it.renderBlock(e); err != nil {
 			return err
