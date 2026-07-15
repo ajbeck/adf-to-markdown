@@ -80,6 +80,16 @@ Markdown type labels:
 | `textColor` | HTML inline | `<span style="color:#hex">text</span>` |
 | `backgroundColor` | - | Not preserved (loss accepted) |
 
+## Schema v56.1.3 additions
+
+| Addition | Status | Required change |
+|---|---|---|
+| `codeBlock.attrs.wrap` / `hideLineNumbers` | implemented | Validate the boolean attributes; Markdown rendering intentionally omits display preferences. |
+| Leading nested `taskList` | implemented | Decode it as a valid child and render it without artificial top-level indentation. |
+| `fontSize` mark (`small`) | missing | Model paragraph marks and render `small` with HTML `<small>…</small>`. |
+| `dataConsumer` mark | not preserved | Retain its `sources` metadata on media and extension nodes, then define a custom Markdown extension or an explicit loss policy. |
+| `valign` on layout columns and table cells/headers | not preserved | Add an HTML-table fallback or a custom extension; GFM tables cannot represent vertical alignment. |
+
 ## Schema Variants
 
 The following are schema variants of the above and are handled through base-node support:

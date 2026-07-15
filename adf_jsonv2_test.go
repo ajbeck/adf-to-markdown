@@ -109,7 +109,7 @@ func TestUnmarshalADF(t *testing.T) {
 				"version": 1,
 				"type": "doc",
 				"content": [
-					{"type": "codeBlock", "attrs": {"language": "go", "wrap": null, "hideLineNumbers": true}, "content": [
+					{"type": "codeBlock", "attrs": {"language": "go", "wrap": true, "hideLineNumbers": true}, "content": [
 						{"type": "text", "text": "fmt.Println(\"ok\")\n"}
 					]}
 				]
@@ -435,6 +435,22 @@ func TestUnmarshalADF(t *testing.T) {
 				]
 			}`,
 			expected: "- [ ] Parent\n  - [x] Child",
+		},
+		{
+			name: "task_list_with_leading_nested_list",
+			input: `{
+				"version":1,
+				"type":"doc",
+				"content":[
+					{"type":"taskList","attrs":{"localId":"top"},"content":[
+						{"type":"taskList","attrs":{"localId":"nested"},"content":[
+							{"type":"taskItem","attrs":{"localId":"child","state":"DONE"},"content":[{"type":"text","text":"Child"}]}
+						]},
+						{"type":"taskItem","attrs":{"localId":"next","state":"TODO"},"content":[{"type":"text","text":"Next"}]}
+					]}
+				]
+			}`,
+			expected: "- [x] Child\n- [ ] Next",
 		},
 		{
 			name: "task_list_with_block_task_item",
@@ -842,27 +858,6 @@ func TestStrictAndErrorPaths(t *testing.T) {
 		}
 	})
 
-	t.Run("nested_task_list_requires_leading_task_item", func(t *testing.T) {
-		_, err := UnmarshalADF([]byte(`{
-			"version":1,"type":"doc","content":[
-				{"type":"taskList","attrs":{"localId":"top"},"content":[
-					{"type":"taskList","attrs":{"localId":"nested"},"content":[
-						{"type":"taskItem","attrs":{"localId":"child","state":"TODO"},"content":[{"type":"text","text":"Child"}]}
-					]}
-				]}
-			]}`), WithBuiltInSchemaValidation(false))
-		if err == nil {
-			t.Fatal("expected error")
-		}
-		var de *Error
-		if !errors.As(err, &de) {
-			t.Fatalf("expected *Error, got %T", err)
-		}
-		if de.Path != "/content/0/content/0" || de.Kind != ErrKindInvalidStructure {
-			t.Fatalf("unexpected error metadata: %+v", de)
-		}
-	})
-
 	t.Run("bad link mark path", func(t *testing.T) {
 		_, err := UnmarshalADF([]byte(`{
 			"version":1,"type":"doc","content":[
@@ -1036,6 +1031,21 @@ func TestValidateADFSchema(t *testing.T) {
 		}`))
 		if err != nil {
 			t.Fatalf("expected valid schema, got %v", err)
+		}
+	})
+
+	t.Run("latest schema additions", func(t *testing.T) {
+		err := ValidateADFSchema([]byte(`{
+			"version": 1,
+			"type": "doc",
+			"content": [{
+				"type": "paragraph",
+				"marks": [{"type":"fontSize","attrs":{"fontSize":"small"}}],
+				"content": [{"type":"text","text":"small text"}]
+			}]
+		}`))
+		if err != nil {
+			t.Fatalf("expected latest schema construct to validate, got %v", err)
 		}
 	})
 

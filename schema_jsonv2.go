@@ -11,7 +11,10 @@ import (
 	"github.com/google/jsonschema-go/jsonschema"
 )
 
-//go:embed schema/adf-full-schema-51.5.15.json
+// The upstream v56.1.3 schema is normalized from draft-04 to draft-07 because
+// jsonschema-go does not support draft-04.
+//
+//go:embed schema/adf-full-schema-56.1.3.json
 var embeddedADFSchema []byte
 
 var (
