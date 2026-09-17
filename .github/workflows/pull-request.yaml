@@ -25,6 +25,12 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Check generated schema
+        id: schema
+        run: |
+          go generate ./...
+          git diff --exit-code -- schema/
+
       - name: Format
         id: fmt
         run: make fmt-check
@@ -268,6 +274,7 @@ jobs:
             body += '### CI Checks\n\n';
             body += '| Step | Status |\n';
             body += '|------|--------|\n';
+            body += `| Generated schema | ${statusEmoji(ciResult)} |\n`;
             body += `| Format | ${statusEmoji(ciResult)} |\n`;
             body += `| Vet | ${statusEmoji(ciResult)} |\n`;
             body += `| Build | ${statusEmoji(ciResult)} |\n`;
