@@ -19,7 +19,7 @@ go get github.com/ajbeck/adf-to-markdown
 
 ## Generate (Before Build/Test)
 
-If your project uses code generation, run:
+To regenerate the embedded persisted-API schema, run:
 
 ```bash
 GOEXPERIMENT=jsonv2 go generate ./...
@@ -31,7 +31,10 @@ Then run tests:
 GOEXPERIMENT=jsonv2 go test ./...
 ```
 
-Note: this repository is safe to run with `go generate ./...` even when no generators are configured.
+This updates a committed generated file. Review the result before committing it.
+The embedded validator uses
+Atlassian's schema 57.5.0 plus a documented persisted-API compatibility overlay.
+See [schema sources and compatibility behavior](schema/README.md).
 
 ## Basic Usage
 

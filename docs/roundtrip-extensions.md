@@ -392,8 +392,9 @@ Format: `[extension:TYPE:KEY]`
 | `subsup` (sup) | `<sup>text</sup>` | Requires HTML inline parsing |
 | `textColor` | Not preserved | Loss accepted |
 | `backgroundColor` | Not preserved | Loss accepted |
+| `fontSize` (`small`, paragraph-level) | `<small>text</small>` | Requires HTML inline parsing |
 
-**goldmark-adf**: New parser extension to handle inline HTML tags `<u>`, `<sub>`, `<sup>` and apply the corresponding ADF marks.
+**goldmark-adf**: New parser extension to handle inline HTML tags `<u>`, `<sub>`, `<sup>`, and `<small>`. The `<small>` form applies the corresponding ADF mark to the containing paragraph.
 
 ## Implementation Phases
 

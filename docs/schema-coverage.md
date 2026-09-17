@@ -2,6 +2,12 @@
 
 For ADF node details not covered by official Atlassian documentation, see [adf-nodes.md](adf-nodes.md). For the markdown syntax produced by each node, see [extensions.md](extensions.md).
 
+The built-in validator targets ADF persisted by the Jira and Confluence Cloud
+APIs. It is generated from Atlassian's `@atlaskit/adf-schema` v57.5.0
+`full.json` plus the narrowly scoped, persisted-API compatibility corrections in
+[`schema/README.md`](../schema/README.md). It is not an assertion that every
+runtime-only or write-only attribute is persisted by either product.
+
 Status labels:
 
 - `implemented`: explicit decode + render support
@@ -79,14 +85,25 @@ Markdown type labels:
 | `subsup` (sup) | HTML inline | `<sup>text</sup>` |
 | `textColor` | HTML inline | `<span style="color:#hex">text</span>` |
 | `backgroundColor` | - | Not preserved (loss accepted) |
+| `fontSize` (`small`, paragraph-level) | HTML inline | `<small>…</small>` |
 
-## Schema v56.1.3 additions
+## Schema v57.5.0 baseline and persisted-API corrections
 
-| Addition | Status | Required change |
+| Addition | Status | Behavior |
 |---|---|---|
-| `codeBlock.attrs.wrap` / `hideLineNumbers` | implemented | Validate the boolean attributes; Markdown rendering intentionally omits display preferences. |
-| Leading nested `taskList` | implemented | Decode it as a valid child and render it without artificial top-level indentation. |
-| `fontSize` mark (`small`) | missing | Model paragraph marks and render `small` with HTML `<small>…</small>`. |
+| `status.attrs.color: #RRGGBB` | implemented | Upstream 57.5.0 accepts six-digit hex colors alongside the six named colors; preserve them in `[status:text\|color]`. |
+| `date`, `emoji`, `mediaInline` with `attrs.url` | accepted; metadata loss | Accept string URLs reported in issue #7 and omit this extra metadata. Inline media still uses `atlassian-media://collection/id`. |
+| `heading.attrs.level` omitted | implemented | Default to level 1, including when `attrs` is omitted; reject invalid explicit levels. |
+| `panel.attrs.panelType` omitted | implemented | Default to an INFO alert, including when `attrs` is omitted; reject invalid explicit types. |
+| `codeBlock` text with marks | accepted; formatting loss | Accept valid formatted/code text in root and nested code blocks; preserve literal text and omit marks inside the fence. |
+| `inlineCard.marks.annotation` | accepted; metadata loss | Confluence persists an annotation mark on an inline card. Render the existing `[card:url]` syntax and omit annotation metadata. |
+| `mediaInline.attrs.__fileName` | accepted; metadata loss | Confluence can return this service metadata without an explicit media type. Validate it but do not use it as Markdown alt text. |
+| `mediaInline.attrs.type` omitted | implemented | Normalize to `file`, Atlassian's runtime default, and emit `atlassian-media://collection/id`. |
+| `mediaInline.attrs.type: image` | implemented | Treat image media as file media for the existing internal-media URL scheme. |
+| `taskItem.attrs.localId: null` | accepted; metadata loss | Confluence templates can persist null for an empty task item's session identifier. |
+| `fontSize` mark (`small`) | implemented | Preserve the paragraph-level mark as `<small>…</small>`. |
+| `codeBlock.attrs.wrap` / `hideLineNumbers` | implemented | Validate boolean attributes; Markdown omits display preferences. |
+| Leading nested `taskList` | implemented | Render without artificial top-level indentation. |
 | `dataConsumer` mark | not preserved | Retain its `sources` metadata on media and extension nodes, then define a custom Markdown extension or an explicit loss policy. |
 | `valign` on layout columns and table cells/headers | not preserved | Add an HTML-table fallback or a custom extension; GFM tables cannot represent vertical alignment. |
 

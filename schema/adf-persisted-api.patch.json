@@ -1,0 +1,103 @@
+[
+  {
+    "op": "add",
+    "path": "/definitions/inlineCard_node/properties/marks",
+    "value": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/annotation_mark"
+      }
+    }
+  },
+  {
+    "op": "add",
+    "path": "/definitions/mediaInline_node/properties/attrs/properties/__fileName",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "replace",
+    "path": "/definitions/taskItem_node/properties/attrs/properties/localId",
+    "value": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  {
+    "op": "add",
+    "path": "/definitions/date_node/properties/attrs/properties/url",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "add",
+    "path": "/definitions/emoji_node/properties/attrs/properties/url",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "add",
+    "path": "/definitions/mediaInline_node/properties/attrs/properties/url",
+    "value": {
+      "type": "string"
+    }
+  },
+  {
+    "op": "replace",
+    "path": "/definitions/heading_node/required",
+    "value": [
+      "type"
+    ]
+  },
+  {
+    "op": "replace",
+    "path": "/definitions/heading_node/properties/attrs/required",
+    "value": []
+  },
+  {
+    "op": "replace",
+    "path": "/definitions/panel_node/required",
+    "value": [
+      "type",
+      "content"
+    ]
+  },
+  {
+    "op": "replace",
+    "path": "/definitions/panel_node/properties/attrs/required",
+    "value": []
+  },
+  {
+    "op": "replace",
+    "path": "/definitions/codeBlock_node/properties/content/items",
+    "value": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/formatted_text_inline_node"
+        },
+        {
+          "$ref": "#/definitions/code_inline_node"
+        }
+      ]
+    }
+  },
+  {
+    "op": "replace",
+    "path": "/definitions/codeBlock_root_only_node/properties/content/items",
+    "value": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/formatted_text_inline_node"
+        },
+        {
+          "$ref": "#/definitions/code_inline_node"
+        }
+      ]
+    }
+  }
+]
