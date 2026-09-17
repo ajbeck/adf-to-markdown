@@ -73,19 +73,22 @@ func (d *decoder) decodeBlock(raw jsontext.Value, path string) (blockNode, error
 	}
 	switch env.Type {
 	case "paragraph":
+		if err := d.validateParagraphMarks(env.Marks, path+"/marks"); err != nil {
+			return nil, err
+		}
 		content, err := d.decodeInlineContent(env.Content, path+"/content")
 		if err != nil {
 			return nil, err
 		}
-		return paragraphNode{Content: content}, nil
+		return paragraphNode{Content: content, Marks: env.Marks}, nil
 	case "heading":
-		levelAny, ok := env.Attrs["level"]
-		if !ok {
-			return nil, newDecodeError(path, ErrKindInvalidAttr, "heading requires attrs.level")
-		}
-		level, err := mustInt(levelAny)
-		if err != nil {
-			return nil, newDecodeError(path, ErrKindInvalidAttr, "heading attrs.level must be integer")
+		// Match Atlassian's runtime default when persisted ADF omits level.
+		level := 1
+		if levelAny, ok := env.Attrs["level"]; ok {
+			level, err = mustInt(levelAny)
+			if err != nil {
+				return nil, newDecodeError(path, ErrKindInvalidAttr, "heading attrs.level must be integer")
+			}
 		}
 		content, err := d.decodeInlineContent(env.Content, path+"/content")
 		if err != nil {
@@ -567,6 +570,9 @@ func (d *decoder) decodeMediaInlineFromBlock(raw jsontext.Value, path string) (i
 func (d *decoder) mediaAttrsToURLAlt(attrs map[string]any, path string) (url, alt string, err error) {
 	alt, _ = attrs["alt"].(string)
 	mt, _ := attrs["type"].(string)
+	if mt == "" {
+		mt = "file"
+	}
 	switch mt {
 	case "external":
 		url, _ = attrs["url"].(string)
@@ -574,7 +580,7 @@ func (d *decoder) mediaAttrsToURLAlt(attrs map[string]any, path string) (url, al
 			return "", "", newDecodeError(path, ErrKindInvalidAttr, "external media requires attrs.url")
 		}
 		return url, alt, nil
-	case "file", "link":
+	case "file", "image", "link":
 		id, _ := attrs["id"].(string)
 		collection, _ := attrs["collection"].(string)
 		if id == "" && d.cfg.StrictSchema {
@@ -666,6 +672,19 @@ func (d *decoder) validateMarks(marks []mark, path string) error {
 	return nil
 }
 
+func (d *decoder) validateParagraphMarks(marks []mark, path string) error {
+	for i, m := range marks {
+		if m.Type != "fontSize" {
+			continue
+		}
+		fontSize, _ := m.Attrs["fontSize"].(string)
+		if d.cfg.StrictSchema && fontSize != "small" {
+			return newDecodeError(fmt.Sprintf("%s/%d", path, i), ErrKindInvalidMark, "fontSize mark requires attrs.fontSize=small")
+		}
+	}
+	return nil
+}
+
 func (d *decoder) decodeCodeBlockText(raws []jsontext.Value, path string) (string, error) {
 	out := ""
 	for i, raw := range raws {
@@ -679,9 +698,8 @@ func (d *decoder) decodeCodeBlockText(raws []jsontext.Value, path string) (strin
 			}
 			return "", newDecodeError(fmt.Sprintf("%s/%d", path, i), ErrKindInvalidStructure, "codeBlock content must be text nodes")
 		}
-		if d.cfg.StrictSchema && len(env.Marks) > 0 {
-			return "", newDecodeError(fmt.Sprintf("%s/%d", path, i), ErrKindInvalidStructure, "codeBlock text must not have marks")
-		}
+		// Persisted code text may carry marks. Fenced Markdown preserves the
+		// literal text, so formatting and annotation metadata are omitted.
 		out += env.Text
 	}
 	return out, nil

@@ -19,6 +19,7 @@ type document struct {
 
 type paragraphNode struct {
 	Content []inlineNode
+	Marks   []mark
 }
 
 type headingNode struct {
@@ -154,7 +155,18 @@ type mark struct {
 }
 
 func (n paragraphNode) renderBlock(e *emitter) error {
+	for _, m := range n.Marks {
+		if m.Type == "fontSize" && m.Attrs["fontSize"] == "small" {
+			e.writeString("<small>")
+		}
+	}
 	e.writeInlineNodes(n.Content)
+	for i := len(n.Marks) - 1; i >= 0; i-- {
+		m := n.Marks[i]
+		if m.Type == "fontSize" && m.Attrs["fontSize"] == "small" {
+			e.writeString("</small>")
+		}
+	}
 	return nil
 }
 
@@ -277,9 +289,12 @@ func (n taskListNode) renderBlock(e *emitter) error {
 
 func (n taskItemNode) renderBlock(e *emitter) error {
 	if n.State == "DONE" {
-		e.writeString("- [x] ")
+		e.writeString("- [x]")
 	} else {
-		e.writeString("- [ ] ")
+		e.writeString("- [ ]")
+	}
+	if len(n.Content) > 0 {
+		e.writeString(" ")
 	}
 	e.writeInlineNodes(n.Content)
 	return nil

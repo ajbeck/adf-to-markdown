@@ -11,10 +11,11 @@ import (
 	"github.com/google/jsonschema-go/jsonschema"
 )
 
-// The upstream v56.1.3 schema is normalized from draft-04 to draft-07 because
+// The embedded schema is Atlassian's v57.5.0 generated full schema, normalized
+// from draft-04 to draft-07, with narrowly scoped persisted-API corrections.
 // jsonschema-go does not support draft-04.
 //
-//go:embed schema/adf-full-schema-56.1.3.json
+//go:embed schema/adf-persisted-api-schema-57.5.0.json
 var embeddedADFSchema []byte
 
 var (

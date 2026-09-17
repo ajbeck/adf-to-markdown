@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "inlineCard",
+          "attrs": {"url": "https://example.com/card"},
+          "marks": [
+            {
+              "type": "annotation",
+              "attrs": {"id": "annotation-1", "annotationType": "inlineComment"}
+            }
+          ]
+        },
+        {"type": "text", "text": " "},
+        {
+          "type": "mediaInline",
+          "attrs": {
+            "id": "media-id-1",
+            "collection": "contentId-1",
+            "__fileName": "Invalid file id - media-id-1"
+          }
+        }
+      ]
+    },
+    {
+      "type": "taskList",
+      "attrs": {"localId": ""},
+      "content": [
+        {
+          "type": "taskItem",
+          "attrs": {"state": "TODO", "localId": null}
+        }
+      ]
+    }
+  ]
+}

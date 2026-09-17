@@ -21,3 +21,6 @@ Example opts file:
 
 Use these fixtures for sanitized real Jira/Confluence payloads.
 
+For every API-readback fixture, add a matching `<name>.meta.md` file with its
+product/API representation, observation date, and a statement that it has been
+structurally minimized and sanitized. Do not commit raw API responses.
